@@ -74,7 +74,7 @@ In order for it to work, you'll need to create a file called `config.h` which in
 const char* ssid PROGMEM = "MY_WIFI";
 const char* password PROGMEM = "PASSWORD";
 const char* imageUrl PROGMEM = "http://cloud.function.here"; // https doesn't work at the moment :(
-const uint64_t delayInMicroseconds = 7.2e9; // 2 hours
+const uint16_t hoursBetweenUpdates PROGMEM = 6;
 ```
 
 ### Installation

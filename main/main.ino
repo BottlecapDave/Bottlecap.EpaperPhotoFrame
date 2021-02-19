@@ -8,7 +8,14 @@
 
 // Instantiate the GxEPD2_BW class for our display type 
 GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT / 2>
-display(GxEPD2_750_T7(15, 4, 2, 5)); // https://github.com/ZinggJM/GxEPD2/blob/2d1474910274148dc009ce65e55a295aeeb29d02/examples/GxEPD2_Example/GxEPD2_display_selection.h#L42
+display(GxEPD2_750_T7(15, 4, 2, 5));
+
+// Used for sleeping for more than 2 hours
+#define RTCMEMORYSTART 65
+typedef struct {
+  int count;
+} rtcStore;
+rtcStore rtcMem;
 
 // EPD parameters
 static const uint16_t input_buffer_pixels = 800; // may affect performance
@@ -24,6 +31,44 @@ void setup() {
   Serial.begin(115200);
   Serial.setTimeout(20000);
 
+  readFromRTCMemory();
+  if (rtcMem.count == 0) {
+    downloadAndDrawImage();
+  }
+  writeToRTCMemory();
+  
+  // Go To Sleep
+  Serial.println("I'm awake, but I'm going into deep sleep mode for 1 hour");
+  ESP.deepSleep(3.6e+6);
+}
+
+void loop() {
+  
+}
+
+void readFromRTCMemory() {
+  system_rtc_mem_read(RTCMEMORYSTART, &rtcMem, sizeof(rtcMem));
+
+  Serial.print("count = ");
+  Serial.println(rtcMem.count);
+  yield();
+}
+
+void writeToRTCMemory() {
+  if (rtcMem.count <= hoursBetweenUpdates) {
+    rtcMem.count++;
+  } else {
+    rtcMem.count = 0;
+  }
+
+  system_rtc_mem_write(RTCMEMORYSTART, &rtcMem, 4);
+
+  Serial.print("count = ");
+  Serial.println(rtcMem.count);
+  yield();
+}
+
+void downloadAndDrawImage() {
   // Connect to wifi
   connectToWifi();
   delay(1000);
@@ -43,14 +88,6 @@ void setup() {
   drawBitmapFromSpiffs(fileName, 0, 0, false);
   Serial.println("Image drawn");
   display.powerOff();
-
-  // Go To Sleep
-  Serial.println("I'm awake, but I'm going into deep sleep mode");
-  ESP.deepSleep(delayInMicroseconds);
-}
-
-void loop() {
-  
 }
 
 void connectToWifi() {
