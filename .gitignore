@@ -1,0 +1,6 @@
+bin
+obj
+.vs
+main/config.h
+*.zip
+launchSettings.json
