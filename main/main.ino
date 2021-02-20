@@ -4,6 +4,7 @@
 // https://javl.github.io/image2cpp/
 #include "config.h"
 #include <ESP8266WiFi.h>
+#include <Fonts/FreeMonoBold9pt7b.h>
 #include <ESP8266HTTPClient.h>
 
 // Instantiate the GxEPD2_BW class for our display type 
@@ -16,6 +17,11 @@ typedef struct {
   int count;
 } rtcStore;
 rtcStore rtcMem;
+
+// Low power variables
+#define VCC_ADJ 1.096
+#define BATT_WARNING_VOLTAGE 2.4
+const char LowPower[] = "Low Power";
 
 // EPD parameters
 static const uint16_t input_buffer_pixels = 800; // may affect performance
@@ -30,16 +36,23 @@ uint8_t color_palette_buffer[max_palette_pixels / 8]; // palette buffer for dept
 void setup() {
   Serial.begin(115200);
   Serial.setTimeout(20000);
+  delay(1000);
 
-  readFromRTCMemory();
-  if (rtcMem.count == 0) {
-    downloadAndDrawImage();
+  if (checkAndDisplayLowPower() == false)
+  {
+    readFromRTCMemory();
+    if (rtcMem.count == 0) {
+      downloadAndDrawImage();
+    } else {
+      Serial.println("Not ready to change picture");
+    }
   }
-  writeToRTCMemory();
   
+  writeToRTCMemory();
+
   // Go To Sleep
-  Serial.println("I'm awake, but I'm going into deep sleep mode for 1 hour");
-  ESP.deepSleep(3.6e+6);
+  Serial.println("Going into deep sleep mode for 1 hour");
+  ESP.deepSleep(3.6e+9);
 }
 
 void loop() {
@@ -68,6 +81,39 @@ void writeToRTCMemory() {
   yield();
 }
 
+// Adapted from https://github.com/ZinggJM/GxEPD2/blob/master/examples/GxEPD2_HelloWorld/GxEPD2_HelloWorld.ino
+bool checkAndDisplayLowPower() {
+  Serial.println("Checking power...");
+  Serial.println((float)ESP.getVcc()* VCC_ADJ);
+  // Check battery levels and display warning if low
+  if ((float)ESP.getVcc()* VCC_ADJ < BATT_WARNING_VOLTAGE)
+  {
+    delay(1000);
+    display.init(115200, true, 2, false);
+    display.setFont(&FreeMonoBold9pt7b);
+    display.setTextColor(GxEPD_BLACK);
+    int16_t tbx, tby; uint16_t tbw, tbh;
+    display.getTextBounds(LowPower, 0, 0, &tbx, &tby, &tbw, &tbh);
+    // center the bounding box by transposition of the origin:
+    uint16_t x = ((display.width() - tbw) / 2) - tbx;
+    uint16_t y = ((display.height() - tbh) / 2) - tby;
+    display.setFullWindow();
+    display.firstPage();
+    do
+    {
+      display.fillScreen(GxEPD_WHITE);
+      display.setCursor(x, y);
+      display.print(LowPower);
+    }
+    while (display.nextPage());
+    display.powerOff();
+    Serial.println("Displaying low power warning");
+    return true;
+  }
+
+  return false;
+}
+
 void downloadAndDrawImage() {
   // Connect to wifi
   connectToWifi();
@@ -83,7 +129,7 @@ void downloadAndDrawImage() {
   // Draw Image
   display.init(115200, true, 2, false);
   display.clearScreen();
-  delay(1000);
+  delay(500);
   
   drawBitmapFromSpiffs(fileName, 0, 0, false);
   Serial.println("Image drawn");

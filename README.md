@@ -64,7 +64,7 @@ To connect the devices, you'll need to connect the following
 - [Arduino IDE](https://www.arduino.cc/en/Main/Software)
 - [ESP8266 Arduino IDE](https://randomnerdtutorials.com/how-to-install-esp8266-board-arduino-ide/)
 - [Arduino drivers](https://github.com/nodemcu/nodemcu-devkit/tree/master/Drivers)
-- GxEPD2 Library
+- [GxEPD2 Library](https://github.com/ZinggJM/GxEPD2)
 
 ### Config
 
