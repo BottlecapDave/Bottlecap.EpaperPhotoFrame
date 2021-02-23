@@ -35,7 +35,7 @@ namespace Bottlecap.EPaper.Services
                         Width = query.Width,
                         Height = query.Height
                     }
-                }).BinaryDither(new SixLabors.ImageSharp.Processing.Processors.Dithering.OrderedDither(20)));
+                }).Grayscale().BinaryDither(new SixLabors.ImageSharp.Processing.Processors.Dithering.OrderedDither(100)));
 
                 using (var convertedImageStream = new MemoryStream())
                 {

@@ -7,7 +7,9 @@
 #include <Fonts/FreeMonoBold9pt7b.h>
 #include <ESP8266HTTPClient.h>
 
-// Instantiate the GxEPD2_BW class for our display type 
+// Instantiate the GxEPD2_BW class for our display type. 
+// If your device is not a 7.5 inch, black and white, 800x480 screen then the next two lines will need to be updated.
+// See https://github.com/ZinggJM/GxEPD2 for details.
 GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT / 2>
 display(GxEPD2_750_T7(15, 4, 2, 5));
 
@@ -68,7 +70,7 @@ void readFromRTCMemory() {
 }
 
 void writeToRTCMemory() {
-  if (rtcMem.count <= hoursBetweenUpdates) {
+  if (rtcMem.count < hoursBetweenUpdates) {
     rtcMem.count++;
   } else {
     rtcMem.count = 0;

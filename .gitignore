@@ -4,3 +4,4 @@ obj
 main/config.h
 *.zip
 launchSettings.json
+device/config.h
