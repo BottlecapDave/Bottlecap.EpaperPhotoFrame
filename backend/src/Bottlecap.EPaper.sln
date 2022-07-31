@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Bottlecap.EPaper.Functions.
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GoogleCloudStorage", "GoogleCloudStorage", "{0BA59723-3AC8-40E5-91D3-9D08093729B5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Bottlecap.EPaper.GoogleCloudStorage.Api", "GoogleCloudStorage\Bottlecap.EPaper.GoogleCloudStorage\Bottlecap.EPaper.GoogleCloudStorage.Api.csproj", "{444F04B1-5DFF-4D92-AB3C-A6946A6D7C15}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Bottlecap.EPaper.GoogleCloudStorage.Api", "GoogleCloudStorage\Bottlecap.EPaper.GoogleCloudStorage.Api\Bottlecap.EPaper.GoogleCloudStorage.Api.csproj", "{444F04B1-5DFF-4D92-AB3C-A6946A6D7C15}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bottlecap.EPaper.GoogleCloudStorage.Services", "GoogleCloudStorage\Bottlecap.EPaper.GoogleCloudStorage.Services\Bottlecap.EPaper.GoogleCloudStorage.Services.csproj", "{934DB58C-0759-4ED5-B3A3-47AAC0FF4E65}"
 EndProject
