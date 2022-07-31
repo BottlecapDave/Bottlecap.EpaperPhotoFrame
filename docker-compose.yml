@@ -1,0 +1,6 @@
+services:
+  gcp_api:
+    build:
+      dockerfile: ./backend/src/GoogleCloudStorage
+      context: ./
+    container_name: gcp_api
