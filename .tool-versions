@@ -1,1 +1,3 @@
-dotnet-core 6.0.301
+dotnet-core 6.0.302
+terraform 1.2.6
+terragrunt 0.38.6

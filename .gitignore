@@ -5,3 +5,6 @@ main/config.h
 *.zip
 launchSettings.json
 device/config.h
+.terraform
+.terragrunt-cache
+terragrunt-debug.tfvars.json
