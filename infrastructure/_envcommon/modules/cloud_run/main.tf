@@ -1,19 +1,29 @@
-resource "google_cloud_run_service" "default" {
-    name     = var.cloud_run_name
-    location = var.cloud_run_location
-    template {
-      spec {
-        containers {
-            image = var.cloud_run_image_name
-        }
+resource "google_project_service" "api" {
+  service = "run.googleapis.com"
+  disable_dependent_services = true
+  disable_on_destroy = false
+}
 
-        service_account_name  = var.cloud_run_service_account_email
+resource "google_cloud_run_service" "default" {
+  name     = var.cloud_run_name
+  location = var.cloud_run_location
+  template {
+    spec {
+      containers {
+          image = var.cloud_run_image_name
       }
+
+      service_account_name  = var.cloud_run_service_account_email
     }
-    traffic {
-      percent         = 100
-      latest_revision = true
-    }
+  }
+  traffic {
+    percent         = 100
+    latest_revision = true
+  }
+
+  depends_on = [
+    google_project_service.api
+  ]
 }
 
 data "google_iam_policy" "noauth" {

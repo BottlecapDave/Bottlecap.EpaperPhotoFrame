@@ -16,7 +16,7 @@ dependency "service_account" {
 }
 
 inputs = {
-  cloud_run_name = "living-room-picture-frame-contents"
+  cloud_run_name = "living-room-picture-frame"
   cloud_run_location = include.root.locals.location
   cloud_run_image_name = "gcr.io/cloudrun/hello"
   cloud_run_service_account_email = dependency.service_account.outputs.email
