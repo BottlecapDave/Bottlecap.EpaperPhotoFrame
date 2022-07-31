@@ -1,15 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>Bottlecap.EPaper.Functions.XKCD</AssemblyName>
     <RootNamespace>Bottlecap.EPaper.Functions.XKCD</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Cloud.Functions.Hosting" Version="1.0.0-beta04" />
+    <PackageReference Include="Google.Cloud.Functions.Hosting" Version="1.0.0" />
     <PackageReference Include="Microsoft.SyndicationFeed.ReaderWriter" Version="1.0.2" />
-    <PackageReference Include="System.IO.Pipelines" Version="5.0.1" />
+    <PackageReference Include="System.IO.Pipelines" Version="6.0.2" />
   </ItemGroup>
 
   <ItemGroup>

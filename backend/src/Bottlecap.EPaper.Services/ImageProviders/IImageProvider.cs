@@ -5,6 +5,6 @@ namespace Bottlecap.EPaper.Services.ImageProviders
 {
     public interface IImageProvider
     {
-        Task<byte[]> GetImageAsync();
+        Task<Stream> GetImageAsync();
     }
 }

@@ -1,7 +1,5 @@
 #define ENABLE_GxEPD2_GFX 0 // we won't need the GFX base class
 #include <GxEPD2_BW.h>
-// Online tool for converting images to byte arrays: 
-// https://javl.github.io/image2cpp/
 #include "config.h"
 #include <ESP8266WiFi.h>
 #include <Fonts/FreeMonoBold9pt7b.h>
@@ -21,9 +19,9 @@ typedef struct {
 rtcStore rtcMem;
 
 // Low power variables
-#define VCC_ADJ 1.096
-#define BATT_WARNING_VOLTAGE 2.4
-const char LowPower[] = "Low Power";
+#define BATT_WARNING_VOLTAGE 2400
+const char LowPower[] = "Low Power ";
+ADC_MODE(ADC_VCC);
 
 // EPD parameters
 static const uint16_t input_buffer_pixels = 800; // may affect performance
@@ -35,32 +33,6 @@ uint8_t output_row_color_buffer[max_row_width / 8]; // buffer for at least one r
 uint8_t mono_palette_buffer[max_palette_pixels / 8]; // palette buffer for depth <= 8 b/w
 uint8_t color_palette_buffer[max_palette_pixels / 8]; // palette buffer for depth <= 8 c/w
 
-void setup() {
-  Serial.begin(115200);
-  Serial.setTimeout(20000);
-  delay(1000);
-
-  if (checkAndDisplayLowPower() == false)
-  {
-    readFromRTCMemory();
-    if (rtcMem.count == 0) {
-      downloadAndDrawImage();
-    } else {
-      Serial.println("Not ready to change picture");
-    }
-  }
-  
-  writeToRTCMemory();
-
-  // Go To Sleep
-  Serial.println("Going into deep sleep mode for 1 hour");
-  ESP.deepSleep(3.6e+9);
-}
-
-void loop() {
-  
-}
-
 void readFromRTCMemory() {
   system_rtc_mem_read(RTCMEMORYSTART, &rtcMem, sizeof(rtcMem));
 
@@ -70,7 +42,7 @@ void readFromRTCMemory() {
 }
 
 void writeToRTCMemory() {
-  if (rtcMem.count < hoursBetweenUpdates) {
+  if (rtcMem.count < (hoursBetweenUpdates - 1)) {
     rtcMem.count++;
   } else {
     rtcMem.count = 0;
@@ -83,33 +55,40 @@ void writeToRTCMemory() {
   yield();
 }
 
+void displayPower(float power)
+{
+  delay(100);
+  display.init(115200, true, 2, false);
+  display.setFont(&FreeMonoBold9pt7b);
+  display.setTextColor(GxEPD_BLACK);
+  int16_t tbx, tby; uint16_t tbw, tbh;
+  display.getTextBounds(LowPower, 0, 0, &tbx, &tby, &tbw, &tbh);
+  // center the bounding box by transposition of the origin:
+  uint16_t x = ((display.width() - tbw) / 2) - tbx;
+  uint16_t y = ((display.height() - tbh) / 2) - tby;
+  display.setFullWindow();
+  display.firstPage();
+  do
+  {
+    display.fillScreen(GxEPD_WHITE);
+    display.setCursor(x, y);
+    display.print(LowPower);
+    display.print(power);
+  }
+  while (display.nextPage());
+  display.powerOff();
+  Serial.println("Displaying low power warning");
+}
+
 // Adapted from https://github.com/ZinggJM/GxEPD2/blob/master/examples/GxEPD2_HelloWorld/GxEPD2_HelloWorld.ino
 bool checkAndDisplayLowPower() {
   Serial.println("Checking power...");
-  Serial.println((float)ESP.getVcc()* VCC_ADJ);
+  float power = (float)ESP.getVcc();
+  Serial.println(power);
   // Check battery levels and display warning if low
-  if ((float)ESP.getVcc()* VCC_ADJ < BATT_WARNING_VOLTAGE)
+  if (power < BATT_WARNING_VOLTAGE)
   {
-    delay(1000);
-    display.init(115200, true, 2, false);
-    display.setFont(&FreeMonoBold9pt7b);
-    display.setTextColor(GxEPD_BLACK);
-    int16_t tbx, tby; uint16_t tbw, tbh;
-    display.getTextBounds(LowPower, 0, 0, &tbx, &tby, &tbw, &tbh);
-    // center the bounding box by transposition of the origin:
-    uint16_t x = ((display.width() - tbw) / 2) - tbx;
-    uint16_t y = ((display.height() - tbh) / 2) - tby;
-    display.setFullWindow();
-    display.firstPage();
-    do
-    {
-      display.fillScreen(GxEPD_WHITE);
-      display.setCursor(x, y);
-      display.print(LowPower);
-    }
-    while (display.nextPage());
-    display.powerOff();
-    Serial.println("Displaying low power warning");
+    displayPower(power);
     return true;
   }
 
@@ -117,37 +96,57 @@ bool checkAndDisplayLowPower() {
 }
 
 void downloadAndDrawImage() {
-  // Connect to wifi
-  connectToWifi();
-  delay(1000);
+  char* fileName = "tempimage";
+  
+  // If we can connet to wifi
+  if (connectToWifi() == false) {
+    return;
+  }
+  
+  delay(100);
 
   // Download Photo
-  char* fileName = "tempimage";
   downloadImage(fileName, imageUrl);
 
   // Disconnect wifi as we no longer need it
   WiFi.disconnect(true);
+  delay(1);
 
   // Draw Image
   display.init(115200, true, 2, false);
   display.clearScreen();
-  delay(500);
+  delay(100);
   
   drawBitmapFromSpiffs(fileName, 0, 0, false);
   Serial.println("Image drawn");
   display.powerOff();
 }
 
-void connectToWifi() {
+bool connectToWifi() {
+  WiFi.forceSleepWake();
+  delay(100);
+  
+  WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
+  
+  uint16_t attempts = 0;
   while (WiFi.status() != WL_CONNECTED)
   {
     Serial.println("Connecting to wifi...");
-    delay(500);
+    delay(1000);
+    attempts++;
+
+    if (attempts > 10) {
+      Serial.println("Failed to connect to wifi");
+      return false;
+    }
   }
+  
   Serial.println("");
   Serial.print("IP Address: ");
   Serial.println(WiFi.localIP());
+
+  return true;
 }
 
 void downloadImage(const char *fileName, const char *url) {
@@ -203,7 +202,7 @@ void drawBitmapFromSpiffs(const char *filename, int16_t x, int16_t y, bool with_
 #endif
   if (!file)
   {
-    Serial.print("File not found");
+    Serial.println("File not found");
     return;
   }
   // Parse BMP header
@@ -361,6 +360,7 @@ void drawBitmapFromSpiffs(const char *filename, int16_t x, int16_t y, bool with_
           display.writeImage(output_row_mono_buffer, output_row_color_buffer, x, yrow, w, 1);
         } // end line
         Serial.print("loaded in "); Serial.print(millis() - startTime); Serial.println(" ms");
+        
         display.refresh();
       }
     }
@@ -391,3 +391,36 @@ uint32_t read32(fs::File& f)
   ((uint8_t *)&result)[3] = f.read(); // MSB
   return result;
 }
+
+
+void setup() {
+  // Make sure wifi us turned off when we boot up. This is to preserve energy.
+  WiFi.mode(WIFI_OFF);
+  WiFi.forceSleepBegin();
+  delay(100);
+
+  // We don't want to save network information as we're always specifying our connection and this will wear out flash memory
+  WiFi.persistent(false);
+  
+  Serial.begin(115200);
+  Serial.setTimeout(20000);
+
+  if (checkAndDisplayLowPower() == false)
+  {
+    readFromRTCMemory();
+    if (rtcMem.count == 0) {
+      downloadAndDrawImage();
+    } else {
+      Serial.println("Not ready to change picture");
+    }
+  }
+  
+  writeToRTCMemory();
+
+  // Go To Sleep
+  Serial.println("Going into deep sleep mode for 1 hour");
+  ESP.deepSleep(3.6e+9, WAKE_NO_RFCAL);
+  delay(100);
+}
+
+void loop() {}

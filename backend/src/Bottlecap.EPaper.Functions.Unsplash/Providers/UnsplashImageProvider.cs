@@ -1,14 +1,9 @@
 ﻿
 using Bottlecap.EPaper.Services.ImageProviders;
-using Microsoft.SyndicationFeed;
-using Microsoft.SyndicationFeed.Rss;
 using Newtonsoft.Json;
-using System;
 using System.IO;
-using System.Net;
-using System.Text.RegularExpressions;
+using System.Net.Http;
 using System.Threading.Tasks;
-using System.Xml;
 
 namespace Bottlecap.EPaper.Functions.Unsplash.Providers
 {
@@ -27,17 +22,19 @@ namespace Bottlecap.EPaper.Functions.Unsplash.Providers
             _orientation = orientation;
         }
 
-        public async Task<byte[]> GetImageAsync()
+        public async Task<Stream> GetImageAsync()
         {
-            WebClient client = new WebClient();
-            client.Headers.Add("Authorization", $"Client-ID {_accessKey}");
+            using (var client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Add("Authorization", $"Client-ID {_accessKey}");
 
-            // Get random photo
-            var rawResult = await client.DownloadStringTaskAsync($"{UNSPLASH_URL}?query={_query}&orientation={_orientation}");
-            var result = JsonConvert.DeserializeObject<UnsplashPhoto>(rawResult);
+                // Get random photo
+                var rawResult = await client.GetStringAsync($"{UNSPLASH_URL}?query={_query}&orientation={_orientation}");
+                var result = JsonConvert.DeserializeObject<UnsplashPhoto>(rawResult);
 
-            // Download image
-            return await client.DownloadDataTaskAsync(result.Urls.Small);
+                // Download image
+                return await client.GetStreamAsync(result.Urls.Small);
+            }
         }
     }
 }

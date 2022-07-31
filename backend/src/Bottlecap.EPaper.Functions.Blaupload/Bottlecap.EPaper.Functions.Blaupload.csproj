@@ -2,14 +2,12 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
-    <AssemblyName>Bottlecap.EPaper.Functions.Unsplash</AssemblyName>
-    <RootNamespace>Bottlecap.EPaper.Functions.Unsplash</RootNamespace>
+    <AssemblyName>Bottlecap.EPaper.Functions.Blaupload</AssemblyName>
+    <RootNamespace>Bottlecap.EPaper.Functions.Blaupload</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Google.Cloud.Functions.Hosting" Version="1.0.0" />
-    <PackageReference Include="Microsoft.SyndicationFeed.ReaderWriter" Version="1.0.2" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="System.IO.Pipelines" Version="6.0.2" />
   </ItemGroup>
 

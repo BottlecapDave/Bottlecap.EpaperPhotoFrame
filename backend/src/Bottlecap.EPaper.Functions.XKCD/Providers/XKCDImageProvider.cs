@@ -4,11 +4,10 @@ using Microsoft.SyndicationFeed;
 using Microsoft.SyndicationFeed.Rss;
 using System;
 using System.IO;
-using System.Net;
+using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
-using System.Xml.Serialization;
 
 namespace Bottlecap.EPaper.Functions.XKCD.Providers
 {
@@ -20,33 +19,35 @@ namespace Bottlecap.EPaper.Functions.XKCD.Providers
         {
         }
 
-        public async Task<byte[]> GetImageAsync()
+        public async Task<Stream> GetImageAsync()
         {
-            var client = new WebClient();
-            var itemsResponse = await client.DownloadStringTaskAsync(new Uri(FEED_URL));
-            using (var stringReader = new StringReader(itemsResponse))
+            using (var client = new HttpClient())
             {
-                using (var xmlReader = XmlReader.Create(stringReader, new XmlReaderSettings() { Async = true }))
+                var itemsResponse = await client.GetStringAsync(new Uri(FEED_URL));
+                using (var stringReader = new StringReader(itemsResponse))
                 {
-                    var feedReader = new RssFeedReader(xmlReader);
-
-                    while (await feedReader.Read())
+                    using (var xmlReader = XmlReader.Create(stringReader, new XmlReaderSettings() { Async = true }))
                     {
-                        if (feedReader.ElementType == SyndicationElementType.Item)
+                        var feedReader = new RssFeedReader(xmlReader);
+
+                        while (await feedReader.Read())
                         {
-                            var item = await feedReader.ReadItem();
-                            var regex = new Regex("src=\"([^\"]+)\"");
-                            var match = regex.Match(item.Description);
-                            if (match.Groups.Count == 2)
+                            if (feedReader.ElementType == SyndicationElementType.Item)
                             {
-                                return await client.DownloadDataTaskAsync(match.Groups[1].Value);
+                                var item = await feedReader.ReadItem();
+                                var regex = new Regex("src=\"([^\"]+)\"");
+                                var match = regex.Match(item.Description);
+                                if (match.Groups.Count == 2)
+                                {
+                                    return await client.GetStreamAsync(match.Groups[1].Value);
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            return new byte[0];
+                return new MemoryStream();
+            }
         }
     }
 }
