@@ -8,3 +8,4 @@ device/config.h
 .terraform
 .terragrunt-cache
 terragrunt-debug.tfvars.json
+.ENV

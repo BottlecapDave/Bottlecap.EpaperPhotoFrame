@@ -1,6 +1,10 @@
 services:
   gcp_api:
     build:
-      dockerfile: ./backend/src/GoogleCloudStorage
-      context: ./
+      context: ./backend/src/
+      dockerfile: GoogleCloudStorage.Dockerfile
+    image: europe-west1-docker.pkg.dev/epaper-picture-frames/epaper-picture-frames-apis/google-cloud-storage
+    env_file: .ENV
     container_name: gcp_api
+    ports:
+      - 3000:3000
