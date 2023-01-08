@@ -1,6 +1,7 @@
 ﻿using Bottlecap.EPaper.Services.ImageProviders;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Bmp;
+using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Processing;
 using System;
 using System.IO;
