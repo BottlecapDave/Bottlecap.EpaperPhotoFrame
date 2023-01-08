@@ -9,7 +9,3 @@ variable "cloud_run_location" {
 variable "cloud_run_image_name" {
   type = string
 }
-
-variable "cloud_run_service_account_email" {
-  type = string
-}

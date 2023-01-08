@@ -4,6 +4,11 @@ resource "google_project_service" "api" {
   disable_on_destroy = false
 }
 
+resource google_service_account service_account {
+  account_id   = var.cloud_run_name
+  display_name = var.cloud_run_name
+}
+
 resource "google_cloud_run_service" "default" {
   name     = var.cloud_run_name
   location = var.cloud_run_location
@@ -13,7 +18,7 @@ resource "google_cloud_run_service" "default" {
           image = var.cloud_run_image_name
       }
 
-      service_account_name  = var.cloud_run_service_account_email
+      service_account_name  = google_service_account.service_account.email
     }
   }
   traffic {

@@ -4,7 +4,7 @@ include "root" {
 }
 
 include "artifact_registry" {
-  path = "${dirname(find_in_parent_folders("root.hcl"))}/../_envcommon/artifact_registry.hcl"
+  path = "${dirname(find_in_parent_folders("root.hcl"))}/_envcommon/artifact_registry.hcl"
 }
 
 dependency "service_account" {
@@ -17,6 +17,6 @@ dependency "service_account" {
 
 inputs = {
   artifact_registry_location    = include.root.locals.location
-  artifact_registry_id    = "living-room-picture-frame"
+  artifact_registry_id    = "epaper-picture-frames-apis"
   artifact_registry_service_account_email = dependency.service_account.outputs.email
 }

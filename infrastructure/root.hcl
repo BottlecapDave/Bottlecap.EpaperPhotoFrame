@@ -3,7 +3,7 @@ generate "provider" {
   if_exists = "overwrite_terragrunt"
   contents  = <<EOF
 provider "google" {
-  project = "${local.project}"
+  project = "${get_env("PROJECT")}"
   region = "${local.location}"
 }
 EOF
@@ -12,7 +12,7 @@ EOF
 remote_state {
   backend = "gcs"
   config = {
-    project = local.project
+    project = get_env("PROJECT")
     bucket  = local.bucket_name
     location = local.location
     prefix   = "${basename(get_parent_terragrunt_dir())}/${path_relative_to_include()}"
@@ -21,6 +21,10 @@ remote_state {
     path      = "backend.tf"
     if_exists = "overwrite_terragrunt"
   }
+}
+
+inputs = {
+  project = get_env("PROJECT")
 }
 
 locals {
