@@ -8,7 +8,7 @@ include "cloud_run" {
 }
 
 inputs = {
-  cloud_run_name = "picture-frame"
+  cloud_run_name = "gcp-picture-frame"
   cloud_run_location = include.root.locals.location
   cloud_run_image_name = "gcr.io/cloudrun/hello"
 }
