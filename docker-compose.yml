@@ -7,4 +7,4 @@ services:
     env_file: .ENV
     container_name: gcp_api
     ports:
-      - 3000:3000
+      - 3000:8080

@@ -4,7 +4,7 @@ WORKDIR /app
 ARG environment
 ENV ENVIRONMENT=$environment
 
-ENV PORT=3000
+ENV PORT=8080
 ENV ASPNETCORE_URLS=http://*:$PORT
 EXPOSE $PORT
 
@@ -29,7 +29,7 @@ WORKDIR /app
 
 COPY --from=builder /app/output ./output
 
-ENV PORT=3000
+ENV PORT=8080
 ENV ASPNETCORE_URLS=http://*:$PORT
 EXPOSE $PORT
 
