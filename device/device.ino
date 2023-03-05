@@ -32,6 +32,7 @@ uint8_t output_row_mono_buffer[max_row_width / 8]; // buffer for at least one ro
 uint8_t output_row_color_buffer[max_row_width / 8]; // buffer for at least one row of color bits
 uint8_t mono_palette_buffer[max_palette_pixels / 8]; // palette buffer for depth <= 8 b/w
 uint8_t color_palette_buffer[max_palette_pixels / 8]; // palette buffer for depth <= 8 c/w
+const char* fileName PROGMEM = "tempimage";
 
 void readFromRTCMemory() {
   system_rtc_mem_read(RTCMEMORYSTART, &rtcMem, sizeof(rtcMem));
@@ -96,8 +97,6 @@ bool checkAndDisplayLowPower() {
 }
 
 void downloadAndDrawImage() {
-  char* fileName = "tempimage";
-  
   // If we can connet to wifi
   if (connectToWifi() == false) {
     return;
@@ -106,7 +105,7 @@ void downloadAndDrawImage() {
   delay(100);
 
   // Download Photo
-  downloadImage(fileName, imageUrl);
+  downloadImage();
 
   // Disconnect wifi as we no longer need it
   WiFi.disconnect(true);
@@ -117,7 +116,7 @@ void downloadAndDrawImage() {
   display.clearScreen();
   delay(100);
   
-  drawBitmapFromSpiffs(fileName, 0, 0, false);
+  drawBitmapFromSpiffs(0, 0, false);
   Serial.println("Image drawn");
   display.powerOff();
 }
@@ -149,7 +148,7 @@ bool connectToWifi() {
   return true;
 }
 
-void downloadImage(const char *fileName, const char *url) {
+void downloadImage() {
   if (!SPIFFS.begin()) {
     Serial.println("SPIFFS initialisation failed!");
     while (1) yield(); // Stay here twiddling thumbs waiting
@@ -160,10 +159,13 @@ void downloadImage(const char *fileName, const char *url) {
   File f = SPIFFS.open(fileName, "w");
   if (f) {
     HTTPClient http;
-    http.setTimeout(20000);
-    http.begin(url);
+    http.setTimeout(60000);
+
     Serial.print("Making request: ");
-    Serial.println(url);
+    Serial.println(imageUrl);
+
+    http.begin(imageUrl);
+    
     int httpCode = http.GET();
     Serial.println(httpCode);
     if (httpCode > 0) {
@@ -184,7 +186,7 @@ void downloadImage(const char *fileName, const char *url) {
 // EPD image processing functions
 // Taken from https://github.com/acrobotic/Ai_Demos_ESP8266/blob/571726331b5b1f463c4f1b66b68df3ffa25bc030/epd_slideshow/epd_slideshow.ino#L263/
 // TODO: Because of the processing we're doing in the cloud, this could probably be simplified.
-void drawBitmapFromSpiffs(const char *filename, int16_t x, int16_t y, bool with_color)
+void drawBitmapFromSpiffs(int16_t x, int16_t y, bool with_color)
 {
   fs::File file;
   bool valid = false; // valid format to be handled
@@ -193,12 +195,12 @@ void drawBitmapFromSpiffs(const char *filename, int16_t x, int16_t y, bool with_
   if ((x >= display.width()) || (y >= display.height())) return;
   Serial.println();
   Serial.print("Loading image '");
-  Serial.print(filename);
+  Serial.print(fileName);
   Serial.println('\'');
 #if defined(ESP32)
-  file = SPIFFS.open(String("/") + filename, "r");
+  file = SPIFFS.open(String("/") + fileName, "r");
 #else
-  file = SPIFFS.open(filename, "r");
+  file = SPIFFS.open(fileName, "r");
 #endif
   if (!file)
   {
