@@ -25,23 +25,42 @@ namespace Bottlecap.EPaper.Services
                 throw new ArgumentException(nameof(query));
             }
 
-            var originalImage = await _imageProvider.GetImageAsync();
-            using (var image = Image.Load(originalImage))
-            {
-                image.Mutate(x => x.Resize(new ResizeOptions()
-                {
-                    Mode = ResizeMode.Max,
-                    Size = new Size()
-                    {
-                        Width = query.Width,
-                        Height = query.Height
-                    }
-                }).Grayscale().BinaryDither(new SixLabors.ImageSharp.Processing.Processors.Dithering.OrderedDither(100)));
+            var imageId = await _imageProvider.GetImageIdAsync(query);
 
-                using (var convertedImageStream = new MemoryStream())
+            using (var cachedImage = await _imageProvider.GetImageAsync(imageId, query))
+            {
+                if (cachedImage != null)
                 {
-                    image.Save(convertedImageStream, new BmpEncoder());
-                    return convertedImageStream.ToArray();
+                    using (var convertedImageStream = new MemoryStream())
+                    {
+                        cachedImage.CopyTo(convertedImageStream);
+                        convertedImageStream.Position = 0;
+                        return convertedImageStream.ToArray();
+                    }
+                }
+            }
+
+            using (var originalImage = await _imageProvider.GetImageAsync(imageId))
+            {
+                using (var image = Image.Load(originalImage))
+                {
+                    image.Mutate(x => x.Resize(new ResizeOptions()
+                    {
+                        Mode = ResizeMode.Pad,
+                        Size = new Size()
+                        {
+                            Width = query.Width,
+                            Height = query.Height
+                        }
+                    }).Grayscale().BinaryDither(new SixLabors.ImageSharp.Processing.Processors.Dithering.OrderedDither(100)));
+
+                    using (var convertedImageStream = new MemoryStream())
+                    {
+                        image.Save(convertedImageStream, new BmpEncoder());
+                        convertedImageStream.Position = 0;
+                        await _imageProvider.SaveImageAsync(convertedImageStream, imageId, query);
+                        return convertedImageStream.ToArray();
+                    }
                 }
             }
         }
