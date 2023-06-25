@@ -105,20 +105,26 @@ void downloadAndDrawImage() {
   delay(100);
 
   // Download Photo
-  downloadImage();
-
+  bool is_image_downloaded = downloadImage();
+  
   // Disconnect wifi as we no longer need it
   WiFi.disconnect(true);
   delay(1);
 
-  // Draw Image
-  display.init(115200, true, 2, false);
-  display.clearScreen();
-  delay(100);
-  
-  drawBitmapFromSpiffs(0, 0, false);
-  Serial.println("Image drawn");
-  display.powerOff();
+  if (is_image_downloaded) {  
+    // Draw Image
+    display.init(115200, true, 2, false);
+    display.clearScreen();
+    delay(100);
+    
+    drawBitmapFromSpiffs(0, 0, false);
+    Serial.println("Image drawn");
+    display.powerOff();
+  }
+  else
+  {
+    Serial.println("Skipping image");
+  }
 }
 
 bool connectToWifi() {
@@ -148,7 +154,7 @@ bool connectToWifi() {
   return true;
 }
 
-void downloadImage() {
+bool downloadImage() {
   if (!SPIFFS.begin()) {
     Serial.println("SPIFFS initialisation failed!");
     while (1) yield(); // Stay here twiddling thumbs waiting
@@ -157,6 +163,7 @@ void downloadImage() {
   Serial.println("Removing previous images...");
   SPIFFS.format();
   File f = SPIFFS.open(fileName, "w");
+  bool is_successful = false;
   if (f) {
     HTTPClient http;
     http.setTimeout(60000);
@@ -167,11 +174,13 @@ void downloadImage() {
     http.begin(imageUrl);
     
     int httpCode = http.GET();
-    Serial.println(httpCode);
+    Serial.printf("HTTP Status: %s\n", httpCode);
     if (httpCode > 0) {
       if (httpCode == HTTP_CODE_OK) {
+        Serial.println("Downloading file...");
         http.writeToStream(&f);
         Serial.println("File downloaded.");
+        is_successful = true;
       }
     } else {
       Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
@@ -181,6 +190,8 @@ void downloadImage() {
   }
 
   f.close();
+
+  return is_successful;
 }
 
 // EPD image processing functions
